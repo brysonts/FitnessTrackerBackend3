@@ -1,4 +1,4 @@
-const client = require("./client");
+const client = require('./client')
 
 async function addActivityToRoutine({
   routineId,
@@ -24,4 +24,4 @@ module.exports = {
   updateRoutineActivity,
   destroyRoutineActivity,
   canEditRoutineActivity,
-};
+}

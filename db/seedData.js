@@ -1,15 +1,31 @@
 // require in the database adapter functions as you write them (createUser, createActivity...)
-// const { } = require('./');
-const client = require("./client")
+const { createUser } = require('./')
+const client = require('./client')
 
 async function dropTables() {
-  console.log("Dropping All Tables...")
+  console.log('Dropping All Tables...')
   // drop all tables, in the correct order
+  await client.query('DROP TABLE IF EXISTS routine_activities;')
+  await client.query('DROP TABLE IF EXISTS routines;')
+  await client.query('DROP TABLE IF EXISTS activities;')
+  await client.query('DROP TABLE IF EXISTS users;')
 }
 
 async function createTables() {
-  console.log("Starting to build tables...")
+  console.log('Starting to build tables...')
   // create all tables, in the correct order
+  await client.query(
+    'CREATE TABLE users(id SERIAL PRIMARY KEY, username VARCHAR (255) UNIQUE NOT NULL, password VARCHAR (255) NOT NULL);',
+  )
+  await client.query(
+    'CREATE TABLE activities(id SERIAL PRIMARY KEY, name VARCHAR(255),description TEXT NOT NULL);',
+  )
+  await client.query(
+    'CREATE TABLE routines(id SERIAL PRIMARY KEY, "creatorId" INTEGER REFERENCES users(id), "isPublic" BOOLEAN DEFAULT false, name VARCHAR(255) UNIQUE NOT NULL, goal TEXT NOT NULL);',
+  )
+  await client.query(
+    'CREATE TABLE routine_activities(id SERIAL PRIMARY KEY, "routineId" INTEGER REFERENCES routines (id),"activityId" INTEGER REFERENCES activities (id),duration INTEGER, count INTEGER );',
+  )
 }
 
 /* 
@@ -19,100 +35,111 @@ DO NOT CHANGE ANYTHING BELOW. This is default seed data, and will help you start
 */
 
 async function createInitialUsers() {
-  console.log("Starting to create users...")
+  console.log('Starting to create users...')
   try {
     const usersToCreate = [
-      { username: "albert", password: "bertie99" },
-      { username: "sandra", password: "sandra123" },
-      { username: "glamgal", password: "glamgal123" },
+      { username: 'albert', password: 'bertie99' },
+      { username: 'sandra', password: 'sandra123' },
+      { username: 'glamgal', password: 'glamgal123' },
     ]
     const users = await Promise.all(usersToCreate.map(createUser))
 
-    console.log("Users created:")
+    console.log('Users created:')
     console.log(users)
-    console.log("Finished creating users!")
+    console.log('Finished creating users!')
   } catch (error) {
-    console.error("Error creating users!")
+    console.error('Error creating users!')
     throw error
   }
 }
 async function createInitialActivities() {
   try {
-    console.log("Starting to create activities...")
+    console.log('Starting to create activities...')
 
     const activitiesToCreate = [
       {
-        name: "wide-grip standing barbell curl",
-        description: "Lift that barbell!",
+        name: 'wide-grip standing barbell curl',
+        description: 'Lift that barbell!',
       },
       {
-        name: "Incline Dumbbell Hammer Curl",
+        name: 'Incline Dumbbell Hammer Curl',
         description:
-          "Lie down face up on an incline bench and lift thee barbells slowly upward toward chest",
+          'Lie down face up on an incline bench and lift thee barbells slowly upward toward chest',
       },
       {
-        name: "bench press",
-        description: "Lift a safe amount, but push yourself!",
+        name: 'bench press',
+        description: 'Lift a safe amount, but push yourself!',
       },
-      { name: "Push Ups", description: "Pretty sure you know what to do!" },
-      { name: "squats", description: "Heavy lifting." },
-      { name: "treadmill", description: "running" },
-      { name: "stairs", description: "climb those stairs" },
+      { name: 'Push Ups', description: 'Pretty sure you know what to do!' },
+      { name: 'squats', description: 'Heavy lifting.' },
+      { name: 'treadmill', description: 'running' },
+      { name: 'stairs', description: 'climb those stairs' },
     ]
     const activities = await Promise.all(activitiesToCreate.map(createActivity))
 
-    console.log("activities created:")
+    console.log('activities created:')
     console.log(activities)
 
-    console.log("Finished creating activities!")
+    console.log('Finished creating activities!')
   } catch (error) {
-    console.error("Error creating activities!")
+    console.error('Error creating activities!')
     throw error
   }
 }
 
 async function createInitialRoutines() {
-  console.log("starting to create routines...")
+  console.log('starting to create routines...')
 
   const routinesToCreate = [
     {
       creatorId: 2,
       isPublic: false,
-      name: "Bicep Day",
-      goal: "Work the Back and Biceps.",
+      name: 'Bicep Day',
+      goal: 'Work the Back and Biceps.',
     },
     {
       creatorId: 1,
       isPublic: true,
-      name: "Chest Day",
-      goal: "To beef up the Chest and Triceps!",
+      name: 'Chest Day',
+      goal: 'To beef up the Chest and Triceps!',
     },
     {
       creatorId: 1,
       isPublic: false,
-      name: "Leg Day",
-      goal: "Running, stairs, squats",
+      name: 'Leg Day',
+      goal: 'Running, stairs, squats',
     },
     {
       creatorId: 2,
       isPublic: true,
-      name: "Cardio Day",
-      goal: "Running, stairs. Stuff that gets your heart pumping!",
+      name: 'Cardio Day',
+      goal: 'Running, stairs. Stuff that gets your heart pumping!',
     },
   ]
   const routines = await Promise.all(
-    routinesToCreate.map((routine) => createRoutine(routine))
+    routinesToCreate.map((routine) => createRoutine(routine)),
   )
-  console.log("Routines Created: ", routines)
-  console.log("Finished creating routines.")
+  console.log('Routines Created: ', routines)
+  console.log('Finished creating routines.')
 }
 
 async function createInitialRoutineActivities() {
-  console.log("starting to create routine_activities...")
-  const [bicepRoutine, chestRoutine, legRoutine, cardioRoutine] =
-    await getRoutinesWithoutActivities()
-  const [bicep1, bicep2, chest1, chest2, leg1, leg2, leg3] =
-    await getAllActivities()
+  console.log('starting to create routineactivities...')
+  const [
+    bicepRoutine,
+    chestRoutine,
+    legRoutine,
+    cardioRoutine,
+  ] = await getRoutinesWithoutActivities()
+  const [
+    bicep1,
+    bicep2,
+    chest1,
+    chest2,
+    leg1,
+    leg2,
+    leg3,
+  ] = await getAllActivities()
 
   const routineActivitiesToCreate = [
     {
@@ -171,10 +198,10 @@ async function createInitialRoutineActivities() {
     },
   ]
   const routineActivities = await Promise.all(
-    routineActivitiesToCreate.map(addActivityToRoutine)
+    routineActivitiesToCreate.map(addActivityToRoutine),
   )
-  console.log("routine_activities created: ", routineActivities)
-  console.log("Finished creating routine_activities!")
+  console.log('routineactivities created: ', routineActivities)
+  console.log('Finished creating routineactivities!')
 }
 
 async function rebuildDB() {
@@ -186,7 +213,7 @@ async function rebuildDB() {
     await createInitialRoutines()
     await createInitialRoutineActivities()
   } catch (error) {
-    console.log("Error during rebuildDB")
+    console.log('Error during rebuildDB')
     throw error
   }
 }
