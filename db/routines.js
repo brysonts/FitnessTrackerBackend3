@@ -147,13 +147,16 @@ async function destroyRoutine(id) {
       `,
       [id],
     )
-    await client.query(
+    const result = await client.query(
       `
       DELETE FROM routines
       WHERE id=$1
+      RETURNING *
       `,
       [id],
     )
+
+    return result.rows[0]
   } catch (error) {
     console.error('updating routine:', error)
     throw error
